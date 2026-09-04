@@ -1,0 +1,26 @@
+name: Validate static app
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate HTML and JavaScript
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path("index.html").read_text(encoding="utf-8")
+          scripts=re.findall(r"<script[^>]*>(.*?)</script>", html, re.S|re.I)
+          assert scripts, "No inline script found"
+          Path("/tmp/app.js").write_text("\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/app.js
+          test -f index.html
+          test -f README.md
