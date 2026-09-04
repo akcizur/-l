@@ -60,7 +60,21 @@ function max(id){const w=wins[id];if(!w)return;if(w.state==="max"){w.state="norm
 function close(id){const w=wins[id];if(!w)return;w.e.remove();document.getElementById(id+"t")?.remove();delete wins[id];if(active===id){const n=Object.keys(wins).filter(x=>wins[x].state!=="min");if(n.length)focus(n.at(-1));else active=null}}
 function drag(e,h,id){let sx,sy,ox,oy,on=false;h.addEventListener("pointerdown",ev=>{if(ev.button!==0||wins[id].state==="max")return;sx=ev.clientX;sy=ev.clientY;ox=parseInt(e.style.left)||0;oy=parseInt(e.style.top)||0;const move=x=>{on=true;e.style.left=Math.max(0,ox+x.clientX-sx)+"px";e.style.top=Math.max(0,oy+x.clientY-sy)+"px"};const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);save()};document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);focus(id)})}
 function appMenu(items){return '<div class="menurow">'+items.map(i=>`<button onclick="${i[1]}">${i[0]}</button>`).join("")+"</div>"}
-function note(b,id){b.innerHTML='<div class="pad">'+appMenu([["File","noteSave(\''+id+"\')"],["Open","noteOpen('"+id+"')"],["Clear","noteClear('"+id+"')"],["Help","dialog('Notepad Help','Ctrl+S uloží Notes.txt.')"]])+'<textarea class="editor" id="ed_'+id+'"></textarea><div class="status" id="ns_'+id+'">Ready</div></div>';document.getElementById("ed_"+id).value=state.notes||fs["C:\\My Documents\\Notes.txt"].x||"";document.getElementById("ed_"+id).addEventListener("input",()=>{state.notes=document.getElementById("ed_"+id).value;document.getElementById("ns_"+id).textContent="Modified";save()})}
+function note(b,id){
+  b.innerHTML = `<div class="pad">
+    ${appMenu([["File","noteSave('\${id}')"],["Open","noteOpen('\${id}')"],["Clear","noteClear('\${id}')"],["Help","dialog('Notepad Help','Ctrl+S uloží Notes.txt.')"]])}
+    <textarea class="editor" id="ed_${id}"></textarea>
+    <div class="status" id="ns_${id}">Ready</div>
+  </div>`;
+  const ed = document.getElementById(`ed_${id}`);
+  ed.value = state.notes || (fs["C:\My Documents\Notes.txt"]?.x || "");
+  ed.addEventListener("input", () => {
+    state.notes = ed.value;
+    const status = document.getElementById(`ns_${id}`);
+    if (status) status.textContent = "Modified";
+    save();
+  });
+}
 window.noteSave=id=>{const x=document.getElementById("ed_"+id);if(!x)return;state.notes=x.value;fs["C:\\My Documents\\Notes.txt"]={t:"f",x:x.value};fs["C:\\Desktop\\Notes.txt"]={t:"f",x:x.value};save();document.getElementById("ns_"+id).textContent="Saved";toast("Notes.txt saved")};
 window.noteOpen=id=>{const x=document.getElementById("ed_"+id);if(x){x.value=fs["C:\\My Documents\\Notes.txt"].x||"";state.notes=x.value;save();}};
 window.noteClear=id=>{const x=document.getElementById("ed_"+id);if(x&&confirm("Clear note?")){x.value="";x.dispatchEvent(new Event("input"))}};
